@@ -1,0 +1,26 @@
+#! /usr/bin/env python3
+from scapy.all import ARP, Ether, srp
+import re
+
+regex = "^((25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.){3}(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])/\d\d$"
+
+while True:
+    target_ip = str(input(
+        "Type Network with CIDR that you want to scan in this format 192.168.1.1/24:  \n"))
+    if not (re.search(regex, target_ip)):
+        continue
+    else:
+        break
+
+print("Scanning Network")
+arp = ARP(pdst=target_ip)
+ether = Ether(dst="ff:ff:ff:ff:ff:ff")
+packet = ether/arp
+result = srp(packet, timeout=3, verbose=0)[0]
+clients = []
+for sent, received in result:
+    clients.append({'ip': received.psrc, 'mac': received.hwsrc})
+print("Available devices in the network:")
+print("IP" + " "*18+"MAC")
+for client in clients:
+    print("{:16} {}".format(client['ip'], client['mac']))
